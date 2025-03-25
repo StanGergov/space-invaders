@@ -15,3 +15,5 @@ For the autentication it is using firebase.
 test account:
 username > stan@gmail.com  
 password > asdasd
+
+It is also possible to access with google account
