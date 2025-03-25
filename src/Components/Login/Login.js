@@ -22,19 +22,19 @@ const Login = () => {
         const { email, password } = Object.fromEntries(new FormData(e.currentTarget));
 
 
-            authService.login(email, password)
-                .then((authData) => {
+        authService.login(email, password)
+            .then((authData) => {
 
-                    if (!authData.user) {
-                        return  console.log('error');
-                    }
+                if (!authData.user) {
+                    return console.log('error');
+                }
 
-                    login(authData);
-                    navigate('/');
-                })
-                .catch(err => {
-                    console.error(err);
-                });
+                login(authData);
+                navigate('/');
+            })
+            .catch(err => {
+                console.error(err);
+            });
     };
 
     const onBlurValidationHandler = (e) => {
@@ -66,6 +66,24 @@ const Login = () => {
         }
     }
 
+    function autoLogin() {
+        authService.loginWithGoogle()
+            .then((user) => {
+                let authData = {
+                    user: {
+                        uid: user.uid,
+                        name: user.displayName,
+                        email: user.email,
+                        accessToken: user.accessToken
+                    }
+                };
+                login(authData)
+            })
+            .catch(err => console.log(err))
+
+        return navigate('/');
+    }
+
     return (
         <>
             <h1 className="page-title">Login</h1>
@@ -87,6 +105,11 @@ const Login = () => {
                 <Form.Text>
                     You don't have any account? <Link to="/register">Register from here</Link>
                 </Form.Text>
+
+                <Button className='primary-button' onClick={autoLogin}>
+                    Login with Google
+                </Button>
+
             </Form>
         </>
     );
