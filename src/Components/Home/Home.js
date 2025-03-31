@@ -1,12 +1,43 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, use } from 'react';
 import { Nav } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+
+import * as scoreServices from '../../Services/dbServices'
+import { useAuthContext } from '../../Contexts/authContext';
 
 import './Home.css';
 
+
+
+
 const Home = props => {
 
-    let [gameOver, setGameOver] = useState(false);
+    let [userInfo, setSetUserInfo] = useState(null);
+
+    let user = useAuthContext().user;
+    const canvasRef = useRef(null);
+    const playerRef = useRef(null);
+    const keys = useRef(null);
+    const projectiles = useRef(null);
+    const invaders = useRef(null);
+    let gameOver = useRef(false)
+
+    useEffect(() => {
+        const userInfoForReq = {
+            userId: user._id,
+            userName: user.name,
+            bestScore: 0
+        }
+
+        scoreServices.getScore(userInfoForReq)
+            .then(res => res.json())
+            .then(resData => {
+                setSetUserInfo(resData)
+
+            })
+    }, [user._id, user.name])
+
+
 
     class Player {
         constructor() {
@@ -85,7 +116,7 @@ const Home = props => {
 
             this.position = {
                 x: getRandomPosition(),
-                y: 50
+                y: 0
             }
 
             let image = new Image();
@@ -118,10 +149,15 @@ const Home = props => {
     let frames = 0;
     let randomIntervals = Math.floor((Math.random() * 70) + 70);
 
+
+
     function animate() {
-        console.log(gameOver);
-        
-        if (gameOver) return
+
+        if (gameOver.current) {
+            return
+        }
+
+
         requestAnimationFrame(animate);
         const canvas = canvasRef.current;
         const c = canvas.getContext('2d');
@@ -134,7 +170,13 @@ const Home = props => {
 
         if (playerRef.current.lives <= 0) {
 
-            return setGameOver = true
+            if (playerRef.current.points > userInfo?.bestScore) {
+                scoreServices.updateScore({ userId: userInfo.userId, userName: userInfo.userName, bestScore: playerRef.current.points })
+                    .then()
+            }
+
+            gameOver.current = true
+            return
         }
 
         if (frames == 0) {
@@ -147,8 +189,6 @@ const Home = props => {
             } else {
                 projectile.update();
             }
-
-
         });
 
         if (frames % randomIntervals === 0) {
@@ -164,7 +204,6 @@ const Home = props => {
                 } else {
                     invader.update();
                 }
-
 
                 if (invader.position.y + invader.height >= playerRef.current.position.y
                     && invader.position.x + invader.width >= playerRef.current.position.x
@@ -247,18 +286,12 @@ const Home = props => {
     }
 
     function getRandomPosition() {
-        return Math.random() * (((canvasRef.current.width - 300) - 300) - 220) + 220;
+        return Math.random() * (((canvasRef.current.width - 300) - 300 + 76.8) - 220) + 220;
     }
-
-    const canvasRef = useRef(null);
-    const playerRef = useRef(null);
-    const keys = useRef(null);
-    const projectiles = useRef(null);
-    const invaders = useRef(null);
 
     useEffect(() => {
         const canvas = canvasRef.current
-        
+
         canvas.width = window.innerWidth - 10;
         canvas.height = window.innerHeight - 10;
 
@@ -280,15 +313,12 @@ const Home = props => {
 
         animate();
 
-
         window.addEventListener('keydown', ({ key }) => updateKeys(key, keys, true, projectiles));
 
         window.addEventListener('keyup', ({ key }) => updateKeys(key, keys, false, projectiles));
 
 
-    }, [animate, Invader, Player, updateKeys]);
-
-
+    }, [Invader, Player, updateKeys]);
 
     return <>
         <div className='nav-buttons'>
@@ -297,8 +327,8 @@ const Home = props => {
                 <span>Lives:</span> <span id='lives'>3</span>
             </p>
             <div>
-                <Nav.Link className='nav-button' as={Link} >My scores</Nav.Link>
-                <Nav.Link className='nav-button' onClick={setGameOver = true} as={Link} to="/logout">Logout</Nav.Link>
+                <span>Best score:</span> <span id='score'>{userInfo?.bestScore || 0}</span>
+                <Nav.Link className='nav-button' onClick={() => gameOver.current = true} as={Link} to="/logout">Logout</Nav.Link>
             </div>
         </div>
 

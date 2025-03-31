@@ -8,12 +8,12 @@ import { useAuthContext } from '../../Contexts/authContext';
 import * as authService from '../../Services/authservices';
 
 const Login = () => {
-
     const { login } = useAuthContext();
     const navigate = useNavigate();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+
 
 
     const onLogin = (e) => {
@@ -77,11 +77,11 @@ const Login = () => {
                         accessToken: user.accessToken
                     }
                 };
-                login(authData)
+                login(authData);
+                navigate('/');
             })
             .catch(err => console.log(err))
 
-        return navigate('/');
     }
 
     return (

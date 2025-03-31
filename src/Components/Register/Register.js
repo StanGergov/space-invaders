@@ -30,7 +30,6 @@ const Register = () => {
 
         authService.register(email, password, name)
             .then(authData => {
-
                 login(authData);
                 navigate('/');
             })
