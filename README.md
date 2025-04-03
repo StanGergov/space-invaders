@@ -7,13 +7,13 @@ You can also shoot the invaders whit the space button and accumulate points.
 You will have 3 lives per game.
 
 ### `npm start`
-
 Runs the app in the development mode.\
 Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
 
-For the autentication it is using firebase.
-test account:
-username > stan@gmail.com  
-password > asdasd
+### `npm run server`
+Runs the server in the development mode.\
+The server should be started in order to manage the requests to the data base.
 
-It is also possible to access with google account
+
+
+It is possible to access with google account.
