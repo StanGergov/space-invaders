@@ -28,8 +28,10 @@ const Register = () => {
             return console.error('Passwords missmatch');
         }
 
-        authService.register(email, password, name)
+        authService.register(email, password)
             .then(authData => {
+                console.log(authData);
+
                 login(authData);
                 navigate('/');
             })

@@ -12,30 +12,29 @@ import './Home.css';
 
 const Home = props => {
 
-    let [userInfo, setSetUserInfo] = useState(null);
-
     let user = useAuthContext().user;
     const canvasRef = useRef(null);
     const playerRef = useRef(null);
     const keys = useRef(null);
     const projectiles = useRef(null);
     const invaders = useRef(null);
-    let gameOver = useRef(false)
+    let gameOver = useRef(false);
+    let userInfo = useRef(null).current;
 
     useEffect(() => {
         const userInfoForReq = {
             userId: user._id,
-            userName: user.name,
             bestScore: 0
         }
 
         scoreServices.getScore(userInfoForReq)
             .then(res => res.json())
             .then(resData => {
-                setSetUserInfo(resData)
-
+                userInfo = resData
+                let bestScore = document.querySelector('#bestScore');
+                bestScore.textContent = userInfo.bestScore;
             })
-    }, [user._id, user.name])
+    }, [user._id])
 
 
 
@@ -111,7 +110,7 @@ const Home = props => {
 
             this.velocity = {
                 x: 0,
-                y: 2
+                y: 6
             };
 
             this.position = {
@@ -147,16 +146,13 @@ const Home = props => {
     }
 
     let frames = 0;
-    let randomIntervals = Math.floor((Math.random() * 70) + 70);
-
-
+    let randomIntervals = Math.floor((Math.random() * 30) + 30);
 
     function animate() {
 
         if (gameOver.current) {
             return
         }
-
 
         requestAnimationFrame(animate);
         const canvas = canvasRef.current;
@@ -171,16 +167,12 @@ const Home = props => {
         if (playerRef.current.lives <= 0) {
 
             if (playerRef.current.points > userInfo?.bestScore) {
-                scoreServices.updateScore({ userId: userInfo.userId, userName: userInfo.userName, bestScore: playerRef.current.points })
+                scoreServices.updateScore({ userId: userInfo.userId, bestScore: playerRef.current.points })
                     .then()
             }
 
             gameOver.current = true
             return
-        }
-
-        if (frames == 0) {
-            invaders.current.push(new Invader());
         }
 
         projectiles.current.forEach((projectile, index) => {
@@ -191,14 +183,15 @@ const Home = props => {
             }
         });
 
+
         if (frames % randomIntervals === 0) {
             const newInvaders = [...invaders.current, new Invader()];
             invaders.current = newInvaders;
-            randomIntervals = Math.floor((Math.random() * 100) + 200);
+            randomIntervals = Math.floor((Math.random() * 60) + 100);
         }
 
         invaders.current.forEach((invader, i) => {
-            if (frames > 100) {
+            if (frames > 60) {
                 if (invader.position.y - invader.height >= canvas.height) {
                     invaders.current.splice(i, 1);
                 } else {
@@ -227,6 +220,7 @@ const Home = props => {
                     projectile.position.y > startPositionY && projectile.position.y <= endPositionY
 
                 ) {
+
                     invaders.current.splice(i, 1);
                     projectiles.current.splice(index, 1);
 
@@ -241,9 +235,9 @@ const Home = props => {
 
         const player = playerRef.current;
         if (keys.current.a.pressed && player.position.x >= 300) {
-            player.velocity.x = -7;
+            player.velocity.x = -10;
         } else if (keys.current.d.pressed && player.position.x + player.width <= canvas.width - 300) {
-            player.velocity.x = 7;
+            player.velocity.x = 10;
         } else {
             player.velocity.x = 0;
         }
@@ -286,12 +280,13 @@ const Home = props => {
     }
 
     function getRandomPosition() {
-        return Math.random() * (((canvasRef.current.width - 300) - 300 + 76.8) - 220) + 220;
+        let max = (canvasRef.current.width - 300) - 76.8;
+        let min = 300;
+        return Math.random() * (max - min) + min;
     }
 
     useEffect(() => {
         const canvas = canvasRef.current
-
         canvas.width = window.innerWidth - 10;
         canvas.height = window.innerHeight - 10;
 
@@ -318,7 +313,7 @@ const Home = props => {
         window.addEventListener('keyup', ({ key }) => updateKeys(key, keys, false, projectiles));
 
 
-    }, [Invader, Player, updateKeys]);
+    }, []);
 
     return <>
         <div className='nav-buttons'>
@@ -327,7 +322,7 @@ const Home = props => {
                 <span>Lives:</span> <span id='lives'>3</span>
             </p>
             <div>
-                <span>Best score:</span> <span id='score'>{userInfo?.bestScore || 0}</span>
+                <span>Best score:</span> <span id='bestScore'></span>
                 <Nav.Link className='nav-button' onClick={() => gameOver.current = true} as={Link} to="/logout">Logout</Nav.Link>
             </div>
         </div>
