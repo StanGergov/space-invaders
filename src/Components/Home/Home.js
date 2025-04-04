@@ -19,9 +19,14 @@ const Home = props => {
     const projectiles = useRef(null);
     const invaders = useRef(null);
     let gameOver = useRef(false);
+    let active = useRef(true);
+    const particles = useRef([]);
     let userInfo = useRef(null).current;
 
     const navigate = useNavigate();
+
+    let frames = 0;
+    let randomIntervals = Math.floor((Math.random() * 30) + 30);
 
     useEffect(() => {
         const userInfoForReq = {
@@ -38,8 +43,6 @@ const Home = props => {
             })
     }, [user._id])
 
-
-
     class Player {
         constructor() {
             this.velocity = {
@@ -48,6 +51,7 @@ const Home = props => {
             };
             this.lives = 3;
             this.points = 0;
+            this.opacity = 1;
 
             let image = new Image();
             const canvas = canvasRef.current
@@ -66,11 +70,13 @@ const Home = props => {
             }
         }
 
-
         draw() {
             const canvas = canvasRef.current;
             const c = canvas.getContext('2d');
+            c.save();
+            c.globalAlpha = this.opacity;
             c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
+            c.restore();
         };
 
         update() {
@@ -107,6 +113,7 @@ const Home = props => {
             this.position.y += this.velocity.y;
         }
     }
+
     class Invader {
         constructor() {
 
@@ -147,15 +154,66 @@ const Home = props => {
         }
     }
 
-    let frames = 0;
-    let randomIntervals = Math.floor((Math.random() * 30) + 30);
+    class Particle {
+        constructor({ position, velocity, radius, color, fades }) {
+            this.position = position;
+            this.velocity = velocity;
+            this.radius = radius;
+            this.color = color;
+            this.opacity = 1;
+            this.fades = fades
+        }
+
+        draw() {
+
+            const canvas = canvasRef.current;
+            const c = canvas.getContext('2d');
+
+            c.save();
+            c.globalAlpha = this.opacity;
+            c.beginPath();
+            c.arc(this.position.x, this.position.y, this.radius, 0, Math.PI * 2);
+            c.fillStyle = this.color;
+            c.fill();
+            c.closePath();
+            c.restore()
+        }
+
+        update() {
+            this.draw();
+            this.position.x += this.velocity.x;
+            this.position.y += this.velocity.y;
+
+            if (this.fades) {
+                this.opacity -= 0.01;
+            }
+        }
+    }
+
+    function creteParticles({ object, color, fades }) {
+        for (let index = 0; index < 15; index++) {
+            particles.current.push(new Particle({
+                position: {
+                    x: object.position.x + object.width / 2,
+                    y: object.position.y + object.height / 2
+                },
+                velocity: {
+                    x: (Math.random() - 0.5) * 2,
+                    y: (Math.random() - 0.5) * 2
+                },
+                radius: Math.random() * 7,
+                color: color || 'white',
+                fades
+            }))
+        }
+    }
 
     function animate() {
-
         if (gameOver.current) {
             return navigate('/gameover', {
                 state: { 'score': playerRef.current.points }
             })
+
         }
 
         requestAnimationFrame(animate);
@@ -167,17 +225,17 @@ const Home = props => {
         let scoreEl = document.querySelector('#score');
         let livesEl = document.querySelector('#lives');
 
-
-        if (playerRef.current.lives <= 0) {
-
-            if (playerRef.current.points > userInfo?.bestScore) {
-                scoreServices.updateScore({ userId: userInfo.userId, bestScore: playerRef.current.points })
-                    .then()
+        particles.current.forEach((particle, i) => {
+            if (particle.position.y - particle.radius >= canvas.height) {
+                particle.position.x = Math.random() * canvas.width;
+                particle.position.y = - particle.radius;
             }
-
-            gameOver.current = true
-            return
-        }
+            if (particle.opacity <= 0) {
+                particles.current.splice(i, 1)
+            } else {
+                particle.update()
+            }
+        });
 
         projectiles.current.forEach((projectile, index) => {
             if (projectile.position.y + projectile.radius <= 0) {
@@ -187,12 +245,11 @@ const Home = props => {
             }
         });
 
-
         if (frames % randomIntervals === 0) {
             const newInvaders = [...invaders.current, new Invader()];
             invaders.current = newInvaders;
             randomIntervals = Math.floor((Math.random() * 60) + 100);
-        }
+        };
 
         invaders.current.forEach((invader, i) => {
             if (frames > 60) {
@@ -206,13 +263,38 @@ const Home = props => {
                     && invader.position.x + invader.width >= playerRef.current.position.x
                     && invader.position.x <= playerRef.current.position.x + playerRef.current.width
                 ) {
+
+                    creteParticles({
+                        object: invader,
+                        color: 'green',
+                        fades: true
+                    });
+                    creteParticles({
+                        object: playerRef.current,
+                        color: 'white',
+                        fades: true
+                    });
+
                     playerRef.current.lives--;
-                    livesEl.textContent = playerRef.current.lives
+                    livesEl.textContent = playerRef.current.lives;
                     invaders.current.splice(i, 1);
+
+                    if (playerRef.current.lives <= 0) {
+
+                        playerRef.current.opacity = 0;
+
+                        if (playerRef.current.points > userInfo?.bestScore) {
+                            scoreServices.updateScore({ userId: userInfo.userId, bestScore: playerRef.current.points })
+                                .then()
+                        }
+                        active.current = false
+                        return setTimeout(() => {
+                            gameOver.current = true
+                        }, 1500);
+
+                    }
                 }
             }
-
-
 
             projectiles.current.forEach((projectile, index) => {
                 const startPosition = invader.position.x - projectile.radius;
@@ -224,6 +306,11 @@ const Home = props => {
                     projectile.position.y > startPositionY && projectile.position.y <= endPositionY
 
                 ) {
+                    creteParticles({
+                        object: invader,
+                        color: 'green',
+                        fades: true
+                    });
 
                     invaders.current.splice(i, 1);
                     projectiles.current.splice(index, 1);
@@ -294,6 +381,21 @@ const Home = props => {
         canvas.width = window.innerWidth - 2.3;
         canvas.height = window.innerHeight - 2.3;
 
+        for (let index = 0; index < 100; index++) {
+            particles.current.push(new Particle({
+                position: {
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height
+                },
+                velocity: {
+                    x: 0,
+                    y: 0.4
+                },
+                radius: Math.random() * 2,
+                color: 'white',
+            }))
+        }
+
         playerRef.current = new Player();
         keys.current = {
             a: {
@@ -312,7 +414,10 @@ const Home = props => {
 
         animate();
 
-        window.addEventListener('keydown', ({ key }) => updateKeys(key, keys, true, projectiles));
+        window.addEventListener('keydown', ({ key }) => {
+            if (!active.current) return
+            updateKeys(key, keys, true, projectiles)
+        });
 
         window.addEventListener('keyup', ({ key }) => updateKeys(key, keys, false, projectiles));
 
