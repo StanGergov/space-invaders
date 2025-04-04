@@ -84,7 +84,7 @@ const Register = () => {
     };
 
     return (
-        <>
+        <div className='container'>
             <h1 className="page-title">Register</h1>
             <Form className="register-form" onSubmit={onRegister}>
                 <Form.Group className="mb-3" controlId="formBasicEmail">
@@ -113,7 +113,7 @@ const Register = () => {
                     You already have an account? <Link to="/login">Login from here</Link>
                 </Form.Text>
             </Form>
-        </>
+        </div>
     );
 }
 

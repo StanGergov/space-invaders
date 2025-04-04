@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, use } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Nav } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -20,6 +20,8 @@ const Home = props => {
     const invaders = useRef(null);
     let gameOver = useRef(false);
     let userInfo = useRef(null).current;
+
+    const navigate = useNavigate();
 
     useEffect(() => {
         const userInfoForReq = {
@@ -151,7 +153,9 @@ const Home = props => {
     function animate() {
 
         if (gameOver.current) {
-            return
+            return navigate('/gameover', {
+                state: { 'score': playerRef.current.points }
+            })
         }
 
         requestAnimationFrame(animate);
@@ -287,8 +291,8 @@ const Home = props => {
 
     useEffect(() => {
         const canvas = canvasRef.current
-        canvas.width = window.innerWidth - 10;
-        canvas.height = window.innerHeight - 10;
+        canvas.width = window.innerWidth - 2.3;
+        canvas.height = window.innerHeight - 2.3;
 
         playerRef.current = new Player();
         keys.current = {

@@ -7,6 +7,7 @@ import Home from './Components/Home/Home';
 import Logout from './Components/Logout/Logout';
 import { AuthProvider } from './Contexts/authContext';
 import GuardRoute from './Components/Common/GuardRoute/GuardRoute';
+import GameOver from './Components/Gameover/GameOver';
 
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
             <Route element={<GuardRoute />}>
               < Route path='/' element={<Home />} />
               < Route path="/logout" element={<Logout />} />
+              < Route path='/gameover' element={<GameOver />} />
             </Route>
           </Routes>
         </main>

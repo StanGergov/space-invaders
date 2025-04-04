@@ -85,7 +85,7 @@ const Login = () => {
     }
 
     return (
-        <>
+        <div className='container'>
             <h1 className="page-title">Login</h1>
             <Form className="login-form" onSubmit={onLogin}>
                 <Form.Group className="mb-3" controlId="formBasicEmail">
@@ -103,7 +103,8 @@ const Login = () => {
                 </Button>
 
                 <Form.Text>
-                    You don't have any account? <Link to="/register">Register from here</Link>
+                    You don't have an account? <Link to="/register">Register from here</Link> <br/>
+                    or
                 </Form.Text>
 
                 <Button className='primary-button' onClick={autoLogin}>
@@ -111,7 +112,7 @@ const Login = () => {
                 </Button>
 
             </Form>
-        </>
+        </div>
     );
 };
 
