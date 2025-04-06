@@ -103,7 +103,7 @@ const Login = () => {
                 </Button>
 
                 <Form.Text>
-                    You don't have an account? <Link to="/register">Register from here</Link> <br/>
+                    You don't have an account? <br /> <br /><Link to="/register">Register from here</Link> <br />
                     or
                 </Form.Text>
 

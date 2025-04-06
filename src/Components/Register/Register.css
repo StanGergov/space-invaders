@@ -8,3 +8,14 @@
     color: #a1f7e3;
     font-size: 20px;
 }
+
+@media only screen and (max-width: 600px) {
+    .register-form {
+        gap: 0px;
+        width: 70%;
+    }
+
+    .form-text {
+        font-size: 14px;
+    }
+}

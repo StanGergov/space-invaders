@@ -45,3 +45,14 @@
     margin: 15px;
     font-size: 14px;
 }
+
+@media only screen and (max-width: 600px) {
+    .login-form {
+        gap: 0px;
+        width: 70%;
+    }
+
+    .form-text {
+        font-size: 14px;
+    }
+}

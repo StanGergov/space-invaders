@@ -110,7 +110,7 @@ const Register = () => {
                     Register
                 </Button>
                 <Form.Text>
-                    You already have an account? <Link to="/login">Login from here</Link>
+                    You already have an account? <br /><Link to="/login">Login from here</Link>
                 </Form.Text>
             </Form>
         </div>
