@@ -13,9 +13,9 @@ export const loginWithGoogle = () => {
             const credential = GoogleAuthProvider.credentialFromResult(result);
             const token = credential.accessToken;
             const user = result.user;
-        
+
             return user
-            
+
         }).catch((error) => {
             const errorCode = error.code;
             const errorMessage = error.message;
@@ -23,6 +23,7 @@ export const loginWithGoogle = () => {
             const credential = GoogleAuthProvider.credentialFromError(error);
         });
 }
+
 export const login = (email, password) => {
     return signInWithEmailAndPassword(auth, email, password)
         .then((res) => res)

@@ -17,9 +17,21 @@ code {
   display: flex;
   flex-direction: column;
   max-height: 100vh;
-  background-color: rgb(240, 240, 240);  
+  background-color: rgb(240, 240, 240);
 }
 
 .App .site-content {
   flex-grow: 1;
+}
+
+@media only screen and (max-width: 600px) {
+  html {
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  body {
+    height: 100dvh;
+  }
 }

@@ -46,13 +46,20 @@
     font-size: 14px;
 }
 
-@media only screen and (max-width: 600px) {
-    .login-form {
+@media only screen and (max-width: 500px) {
+    .register-form {
         gap: 0px;
         width: 70%;
     }
 
     .form-text {
         font-size: 14px;
+    }
+
+    .container {
+        height: 100%;
+        gap: 0px;
+        justify-content: 0;
+        color: red;
     }
 }

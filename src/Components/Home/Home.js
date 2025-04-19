@@ -7,21 +7,19 @@ import { useAuthContext } from '../../Contexts/authContext';
 
 import './Home.css';
 
-
-
-
 const Home = props => {
 
     let user = useAuthContext().user;
     const canvasRef = useRef(null);
     const playerRef = useRef(null);
     const keys = useRef(null);
-    const projectiles = useRef(null);
+    const projectiles = useRef([]);
     const invaders = useRef(null);
     let gameOver = useRef(false);
     let active = useRef(true);
     const particles = useRef([]);
     let userInfo = useRef(null).current;
+    let shotInterval = null;
 
     const navigate = useNavigate();
 
@@ -67,16 +65,19 @@ const Home = props => {
                     x: canvas.width / 2 - this.width / 2,
                     y: canvas.height - this.height
                 };
+
             }
         }
 
         draw() {
             const canvas = canvasRef.current;
             const c = canvas.getContext('2d');
+
             c.save();
             c.globalAlpha = this.opacity;
             c.drawImage(this.image, this.position.x, this.position.y, this.width, this.height);
             c.restore();
+
         };
 
         update() {
@@ -137,6 +138,7 @@ const Home = props => {
                 this.image = image;
                 this.width = image.width * scale;
                 this.height = image.height * scale;
+
             }
         }
 
@@ -213,7 +215,6 @@ const Home = props => {
             return navigate('/gameover', {
                 state: { 'score': playerRef.current.points }
             })
-
         }
 
         requestAnimationFrame(animate);
@@ -259,11 +260,11 @@ const Home = props => {
                     invader.update();
                 }
 
-                if (invader.position.y + invader.height >= playerRef.current.position.y
-                    && invader.position.x + invader.width >= playerRef.current.position.x
-                    && invader.position.x <= playerRef.current.position.x + playerRef.current.width
-                ) {
+                const distansX = (invader.position.x + invader.width / 2) - (playerRef.current.position.x + playerRef.current.width / 2);
+                const distansY = (invader.position.y + invader.height / 2) - (playerRef.current.position.y + playerRef.current.height / 2)
+                const distance = Math.sqrt(distansX ** 2 + distansY ** 2);
 
+                if (distance < invader.width / 2.5 + playerRef.current.width / 3) {
                     creteParticles({
                         object: invader,
                         color: 'green',
@@ -280,7 +281,6 @@ const Home = props => {
                     invaders.current.splice(i, 1);
 
                     if (playerRef.current.lives <= 0) {
-
                         playerRef.current.opacity = 0;
 
                         if (playerRef.current.points > userInfo?.bestScore) {
@@ -289,7 +289,8 @@ const Home = props => {
                         }
                         active.current = false
                         return setTimeout(() => {
-                            gameOver.current = true
+                            gameOver.current = true;
+
                         }, 1500);
 
                     }
@@ -297,6 +298,14 @@ const Home = props => {
             }
 
             projectiles.current.forEach((projectile, index) => {
+
+
+                // const distansX = (invader.position.x + invader.width / 2) - (playerRef.current.position.x + playerRef.current.width / 2);
+                // const distansY = (invader.position.y + invader.height / 2) - (playerRef.current.position.y + playerRef.current.height / 2)
+                // const distance = Math.sqrt(distansX ** 2 + distansY ** 2);
+
+                // if (distance < invader.width / 2.5 + playerRef.current.width / 3)
+
                 const startPosition = invader.position.x - projectile.radius;
                 const endPosition = invader.position.x + invader.width + projectile.radius;
                 const startPositionY = invader.position.y - projectile.radius;
@@ -325,28 +334,30 @@ const Home = props => {
         frames++
 
         const player = playerRef.current;
-        if (keys.current.a.pressed && player.position.x >= 300) {
+        if (keys.current.a.pressed && player.position.x >= (canvas.width < 600 ? 0 : 300)) {
             player.velocity.x = -10;
-        } else if (keys.current.d.pressed && player.position.x + player.width <= canvas.width - 300) {
+        } else if (keys.current.d.pressed && player.position.x + player.width <= (canvas.width < 600 ? canvas.width : canvas.width - 300)) {
             player.velocity.x = 10;
         } else {
             player.velocity.x = 0;
         }
     }
 
-    function updateKeys(key, keys, keyDown = true, projectiles) {
+    function updateKeys(key, keys, keyDown, projectiles) {
+
+        if (!active.current) return;
 
         const newKeys = { ...keys.current };
-        const newProjectiles = [...projectiles.current]
-
+        const newProjectiles = [...projectiles.current];
         switch (key) {
-            case 'a':
+            case 'ArrowLeft':
                 newKeys.a.pressed = keyDown;
                 break;
-            case 'd':
+            case 'ArrowRight':
                 newKeys.d.pressed = keyDown;
                 break;
             case ' ':
+            case 'touchstart':
                 if (keyDown) {
                     newProjectiles.push(new Projectile({
                         position: {
@@ -362,12 +373,33 @@ const Home = props => {
                 }
 
                 newKeys.space.pressed = keyDown;
+                newKeys.touchstart.pressed = keyDown;
                 break;
         }
 
         keys.current = newKeys;
         projectiles.current = newProjectiles;
+    }
 
+    function touchMoveHandler(e, canvasWidth) {
+        if (e.targetTouches[0].clientX <= playerRef.current.position.x + playerRef.current.width &&
+            e.targetTouches[0].clientX >= playerRef.current.position.x &&
+            e.targetTouches[0].clientY >= playerRef.current.position.y
+        ) {
+            if (e.targetTouches[0].clientX <= canvasWidth - (playerRef.current.width / 2) &&
+                e.targetTouches[0].clientX >= 0 + (playerRef.current.width / 2)) {
+                playerRef.current.position.x = e.targetTouches[0].clientX - playerRef.current.width / 2;
+            }
+        }
+    }
+
+    function shotOnToch(e, key, keys, keyDown, projectiles) {
+        if (e.targetTouches[0].clientX <= playerRef.current.position.x + playerRef.current.width &&
+            e.targetTouches[0].clientX >= playerRef.current.position.x &&
+            e.targetTouches[0].clientY >= playerRef.current.position.y
+        ) {
+            shotInterval = setInterval(() => updateKeys(key, keys, keyDown, projectiles), 200)
+        }
     }
 
     function getRandomPosition() {
@@ -378,8 +410,17 @@ const Home = props => {
 
     useEffect(() => {
         const canvas = canvasRef.current
-        canvas.width = window.innerWidth - 2.3;
-        canvas.height = window.innerHeight - 2.3;
+
+
+        if (window.navigator.maxTouchPoints >= 1) {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        } else {
+            canvas.width = window.innerWidth - 10;
+            canvas.height = window.innerHeight - 5;
+        }
+        const canvasWidth = canvas.width;
+
 
         for (let index = 0; index < 100; index++) {
             particles.current.push(new Particle({
@@ -407,6 +448,9 @@ const Home = props => {
             space: {
                 pressed: false
             },
+            touchstart: {
+                pressed: false
+            }
         };
 
         projectiles.current = [];
@@ -415,24 +459,31 @@ const Home = props => {
         animate();
 
         window.addEventListener('keydown', ({ key }) => {
-            if (!active.current) return
-            updateKeys(key, keys, true, projectiles)
+            if (!active.current) return;
+            updateKeys(key, keys, true, projectiles);
         });
 
         window.addEventListener('keyup', ({ key }) => updateKeys(key, keys, false, projectiles));
-
+        window.addEventListener('touchstart', (e) => {
+            if (!active.current) return;
+            shotOnToch(e, 'touchstart', keys, true, projectiles)
+        });
+        window.addEventListener('touchmove', (e) => touchMoveHandler(e, canvasWidth));
+        window.addEventListener('touchend', () => clearInterval(shotInterval));
 
     }, []);
 
+
+
     return <>
         <div className='nav-buttons'>
-            <p>
-                <span>Score:</span> <span id='score'>0</span>
-                <span>Lives:</span> <span id='lives'>3</span>
+            <p className='score-lives'>
+                <span>Score: <span id='score'>0</span></span>
+                <span>Lives: <span id='lives'>3</span></span>
             </p>
-            <div>
-                <span>Best score:</span> <span id='bestScore'></span>
-                <Nav.Link className='nav-button' onClick={() => gameOver.current = true} as={Link} to="/logout">Logout</Nav.Link>
+            <div className='best-score'>
+                <span>Best score: <span id='bestScore'></span></span>
+                <Nav.Link className='nav-button' onClick={() => gameOver.current = true} >End Game</Nav.Link>
             </div>
         </div>
 

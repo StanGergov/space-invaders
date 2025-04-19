@@ -2,11 +2,8 @@
     text-decoration: none;
     color: white;
     border: 2px solid gray;
-    /* margin-top: 20px; */
     margin-left: 20px;
-
     padding: 5px;
-
     color: black;
     background-color: #a1f7e3;
 }
@@ -28,4 +25,38 @@
 
 #score {
     margin-right: 10px;
+}
+
+@media screen and (max-width: 600px) {
+
+    .score-lives,
+    .best-score {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;        
+        text-align: center;
+    }
+
+    .score-lives{
+        align-items: flex-start;
+    }
+
+    .nav-buttons {
+        justify-content: space-between;
+    }
+
+    .best-score{
+        flex-direction: column-reverse;
+        align-items: flex-end;
+
+    }
+    #score {
+        margin-right: 0px;
+    }
+
+    .nav-button{
+        margin-left: 0px;
+        padding: 2px;
+    }
 }
