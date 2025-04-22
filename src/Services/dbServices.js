@@ -1,4 +1,4 @@
-const baseUrl = 'http://localhost:5000/api/userScore';
+const baseUrl = 'https://space-invaders-server.onrender.com/api/userScore';
 
 export const getScore = ({ userId, bestScore }) => {
     return fetch(`${baseUrl}/getScore`, {
